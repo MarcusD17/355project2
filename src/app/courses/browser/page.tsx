@@ -1,6 +1,6 @@
 'use client'; // Mark this as a client-side component
 
-import { useState, useEffect, useCallback} from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation'; // For redirecting
 import { db } from '@/app/firebase-config'; // Make sure the path is correct
 import { collection, getDocs, query, orderBy, limit, startAfter } from 'firebase/firestore';
@@ -22,52 +22,12 @@ const CoursesPage = () => {
     const [lastVisible, setLastVisible] = useState<unknown>(null); // Last document for pagination
     const [currentPage, setCurrentPage] = useState<number>(1); // Current page number
     const [totalCourses, setTotalCourses] = useState<number>(0); // Total number of courses in the collection
+    const [fetchedData, setFetchedData] = useState<boolean>(false); // Track if data has been fetched
 
     const coursesPerPage = 15; // Number of courses per page (max 7)
 
-    useEffect(() => {
-        // Check if the user is logged in
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                setRedirecting(true); // Start the redirect process
-                router.push('../authentication/login'); // Redirect to the login page
-            } else {
-                // If the user is logged in, fetch courses
-                fetchTotalCourses();
-            }
-        });
-
-        return () => unsubscribe(); // Clean up the subscription on unmount
-    }, [router]);
-
-    const fetchTotalCourses = useCallback(async () => {
-        try {
-            const coursesQuery = query(collection(db, 'courses'));
-            const querySnapshot = await getDocs(coursesQuery);
-            setTotalCourses(querySnapshot.size); // Set the total number of courses
-            fetchCourses(); // Ensure this is correctly defined elsewhere
-        } catch (error) {
-            console.error('Error fetching total courses: ', error);
-        }
-    }, []); // Add any dependencies if required
- // Add any dependencies if required
-
-    useEffect(() => {
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                setRedirecting(true); // Start the redirect process
-                router.push('../authentication/login'); // Redirect to the login page
-            } else {
-                fetchTotalCourses(); // Fetch total courses if logged in
-            }
-        });
-
-        return () => unsubscribe(); // Clean up the subscription on unmount
-    }, [router, fetchTotalCourses]);
-
-    const fetchCourses = async () => {
+    // Memoize fetchCourses
+    const fetchCourses = useCallback(async () => {
         try {
             setLoading(true);
 
@@ -97,12 +57,41 @@ const CoursesPage = () => {
             // Update lastVisible for pagination
             const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
             setLastVisible(lastDoc);
+
+            setFetchedData(true); // Mark data as fetched
         } catch (error) {
             console.error('Error fetching courses: ', error);
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, coursesPerPage, lastVisible]); // Stable dependencies
+
+    // Memoize fetchTotalCourses
+    const fetchTotalCourses = useCallback(async () => {
+        try {
+            const coursesQuery = query(collection(db, 'courses'));
+            const querySnapshot = await getDocs(coursesQuery);
+            setTotalCourses(querySnapshot.size); // Set the total number of courses
+            fetchCourses(); // Calling fetchCourses here
+        } catch (error) {
+            console.error('Error fetching total courses: ', error);
+        }
+    }, [fetchCourses]); // Stable dependency of fetchCourses
+
+    // Use effect to trigger fetchTotalCourses on login state change
+    useEffect(() => {
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                setRedirecting(true); // Start the redirect process
+                router.push('../authentication/login'); // Redirect to the login page
+            } else {
+                fetchTotalCourses(); // Fetch total courses if logged in
+            }
+        });
+
+        return () => unsubscribe(); // Clean up the subscription on unmount
+    }, [router, fetchTotalCourses]);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handlePageChange = (page: number) => {
@@ -116,12 +105,9 @@ const CoursesPage = () => {
 
     // Loading Skeleton Component
     const SkeletonLoader = () => (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(coursesPerPage)].map((_, index) => (
-                <div
-                    key={index}
-                    className="bg-gray-300 rounded-lg p-6 animate-pulse"
-                >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            {[...Array(15)].map((_, index) => (
+                <div key={index} className="bg-gray-300 rounded-lg p-6 animate-pulse">
                     <div className="h-8 bg-gray-400 rounded mb-4"></div>
                     <div className="h-4 bg-gray-400 rounded mb-2"></div>
                     <div className="h-3 bg-gray-400 rounded"></div>
@@ -139,26 +125,28 @@ const CoursesPage = () => {
         );
     }
 
+    // Show Skeleton Loader only if data is not fetched yet, and prevent flashing between skeleton and content
+    if (loading && !fetchedData) {
+        return <SkeletonLoader />;
+    }
+
     return (
         <div className="max-w-6xl mx-auto p-6">
             <h1 className="text-3xl font-bold text-center mb-6">Courses</h1>
 
-            {loading ? (
-                <SkeletonLoader />
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {courses.map((course, index) => (
-                        <div
-                            key={index}
-                            className="bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition-all"
-                        >
-                            <h3 className="text-2xl text-gray-500 font-semibold">{course.title}</h3>
-                            <p className="text-lg text-gray-500 mt-2">{course.description}</p>
-                            <p className="text-sm text-gray-500 mt-2">Instructor: {course.instructor}</p>
-                        </div>
-                    ))}
-                </div>
-            )}
+            {/* Render actual courses data */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {courses.map((course, index) => (
+                    <div
+                        key={index}
+                        className="bg-white shadow-md rounded-lg p-6 hover:shadow-xl transition-all"
+                    >
+                        <h3 className="text-2xl text-gray-500 font-semibold">{course.title}</h3>
+                        <p className="text-lg text-gray-500 mt-2">{course.description}</p>
+                        <p className="text-sm text-gray-500 mt-2">Instructor: {course.instructor}</p>
+                    </div>
+                ))}
+            </div>
 
             {/* Pagination Controls */}
             <Pagination

@@ -1,4 +1,3 @@
-// AddCoursePage.tsx
 'use client'; // Mark this as a client-side component
 
 import { useState, useEffect, useCallback } from 'react';
@@ -7,6 +6,14 @@ import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, limit, sta
 import SkeletonLoader from "@/app/ui/skeleton-loader";
 import Pagination from "@/app/lib/pagination"; // Import Pagination component
 
+// Define the Course type
+interface Course {
+    id: string;
+    title: string;
+    description: string;
+    instructor: string;
+}
+
 const AddCoursePage = () => {
     const [newCourse, setNewCourse] = useState({
         title: '',
@@ -14,7 +21,7 @@ const AddCoursePage = () => {
         instructor: '',
     });
 
-    const [courses, setCourses] = useState<any[]>([]); // To store fetched courses
+    const [courses, setCourses] = useState<Course[]>([]); // To store fetched courses
     const [coursesToDelete, setCoursesToDelete] = useState<string[]>([]);
     const [loading, setLoading] = useState<boolean>(true); // Loading state
 
@@ -39,9 +46,9 @@ const AddCoursePage = () => {
             );
 
             const querySnapshot = await getDocs(coursesQuery);
-            const coursesData: unknown[] = [];
+            const coursesData: Course[] = []; // Use the Course type
             querySnapshot.forEach((doc) => {
-                coursesData.push({ id: doc.id, ...doc.data() });
+                coursesData.push({ id: doc.id, ...doc.data() } as Course); // Ensure the data matches the Course type
             });
             setCourses(coursesData);
 
