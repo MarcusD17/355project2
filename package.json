@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/firebase": "^2.4.32",
     "clsx": "^2.1.1",
     "firebase": "^11.0.2",
     "firebase-config": "^1.0.0",
