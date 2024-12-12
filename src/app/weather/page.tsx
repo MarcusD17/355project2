@@ -35,6 +35,7 @@ const WeatherPage = () => {
         try {
             const weatherData = await getWeather(city);
             setCurrentWeather(weatherData); // Now weatherData is typed as CurrentWeather
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
             setError('Could not fetch weather data');
         } finally {
