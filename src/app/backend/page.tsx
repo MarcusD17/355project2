@@ -116,7 +116,7 @@ const AddCoursePage = () => {
         });
     };
 
-    // Calculate the total number of pages
+    //Calculate the total number of pages
     const totalPages = Math.ceil(totalCourses / itemsPerPage);
 
     return (
