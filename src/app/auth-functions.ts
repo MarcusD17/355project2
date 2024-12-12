@@ -39,7 +39,7 @@ export const logout = async () => {
     }
 };
 
-export const subscribeToAuthChanges = (callback: (user: any) => void) => {
+export const subscribeToAuthChanges = (callback: (user: unknown) => void) => {
     return onAuthStateChanged(auth, callback);
 };
 export { auth };

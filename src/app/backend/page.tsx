@@ -23,6 +23,7 @@ const AddCoursePage = () => {
     const [totalCourses, setTotalCourses] = useState(0); // Total number of courses for pagination
 
     // State to track selected course (for highlighting)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
 
     // Fetch courses from Firestore with pagination

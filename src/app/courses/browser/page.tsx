@@ -11,7 +11,7 @@ type Course = {
     title: string;
     description: string;
     instructor: string;
-    created_at: any;
+    created_at: unknown;
 };
 
 const CoursesPage = () => {
@@ -90,6 +90,7 @@ const CoursesPage = () => {
         }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
         setLastVisible(null); // Reset lastVisible to load from the start
