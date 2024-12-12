@@ -55,13 +55,19 @@ const AccountPage: React.FC = () => {
                         Logout
                     </button>
                 </div>
-                {/* Link to the backend page */}
+                {/* Links to backend and budget pages */}
                 <div className="mt-4 text-center">
                     <Link
                         href="/backend" // Link to the backend page
-                        className="text-blue-600 hover:underline"
+                        className="text-blue-600 hover:underline block"
                     >
                         Go to Backend
+                    </Link>
+                    <Link
+                        href="/backend/budget" // Link to the backend/budget page
+                        className="text-blue-600 hover:underline block mt-2"
+                    >
+                        Go to Budget Visualizer
                     </Link>
                 </div>
             </div>
