@@ -56,7 +56,9 @@ const LoginPage: React.FC = () => {
     const closeDropdown = () => setDropdownActive(false);
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div
+            className="flex items-center justify-center min-h-screen bg-cover bg-[linear-gradient(to_right,rgba(49,84,124,0.7),rgba(16,71,52,0.7)),url('/students1.jpg')]"
+        >
             <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
                 <h1 className="text-3xl font-bold text-center text-gray-800">Login</h1>
                 <form onSubmit={handleLogin} className="mt-6">

@@ -26,7 +26,7 @@ interface ForecastData {
 const WeatherApp = () => {
     const [weatherData, setWeatherData] = useState<WeatherData | null>(null); // For current weather
     const [forecastData, setForecastData] = useState<ForecastData | null>(null); // For 5-day forecast
-    const [location, setLocation] = useState('London'); // Default location
+    const [location, setLocation] = useState('New York City'); // Default location
     const [loading, setLoading] = useState(true); // Loading state
     const [error, setError] = useState<string | null>(null); // Error handling
     const [search, setSearch] = useState(''); // For search input
@@ -85,64 +85,79 @@ const WeatherApp = () => {
         }
     };
 
+    // Filter forecast data to show one entry per day (every 24 hours)
+    const fiveDayForecast = forecastData?.list.filter((_, index) => index % 8 === 0).slice(0, 5);
+
     return (
-        <div className="max-w-screen-md mx-auto p-6 bg-white shadow-lg rounded-lg mt-40">
-            <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Weather in {location}</h1>
-            <h2 className="font-bold text-center text-gray-800 mb-6" >From our state of the art global weather stations</h2>
+        <div
+            className="min-h-screen bg-cover bg-[linear-gradient(to_right,rgba(49,84,124,0.7),rgba(217,155,52,0.7)),url('/weather.jpg')]">
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="max-w-screen-md mx-auto p-6 bg-white shadow-lg rounded-lg">
+                    <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">Weather in {location}</h1>
+                    <h2 className="font-bold text-center text-gray-800 mb-6">From our state of the art global weather stations</h2>
 
-            {/* Search Bar */}
-            <form onSubmit={handleSearchSubmit} className="flex mb-6">
-                <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Enter a location"
-                    className="p-3 flex-1 border border-gray-300 text-gray-800 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                    type="submit"
-                    className="p-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 focus:outline-none"
-                >
-                    Search
-                </button>
-            </form>
+                    {/* Search Bar */}
+                    <form onSubmit={handleSearchSubmit} className="flex mb-6">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Enter a location"
+                            className="p-3 flex-1 border border-gray-300 text-gray-800 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <button
+                            type="submit"
+                            className="p-3 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 focus:outline-none"
+                        >
+                            Search
+                        </button>
+                    </form>
 
-            {/* Error Message */}
-            {error && (
-                <div className="mb-4 text-center text-xl text-red-500">
-                    {error}
-                </div>
-            )}
+                    {/* Error Message */}
+                    {error && (
+                        <div className="mb-4 text-center text-xl text-red-500">
+                            {error}
+                        </div>
+                    )}
 
-            {/* Loading Spinner */}
-            {loading && <div className="text-center text-xl">Loading...</div>}
+                    {/* Loading Spinner */}
+                    {loading && <div className="text-center text-xl">Loading...</div>}
 
-            {/* Current Weather */}
-            {weatherData && !error && (
-                <div className="mb-8 p-4 bg-blue-100 rounded-lg shadow-md">
-                    <h2 className="text-2xl font-semibold text-black mb-4">Current Weather:</h2>
-                    <p className="text-lg text-gray-800">Temperature: <span className="font-semibold text-gray-800">{weatherData.main?.temp}°C</span></p>
-                    <p className="text-lg text-gray-800">Weather: <span className="font-semibold text-gray-800">{weatherData.weather?.[0]?.description}</span></p>
-                    <p className="text-lg text-gray-800">Humidity: <span className="font-semibold text-gray-800">{weatherData.main?.humidity}%</span></p>
-                    <p className="text-lg text-gray-800">Wind Speed: <span className="font-semibold text-gray-800">{weatherData.wind?.speed} m/s</span></p>
-                </div>
-            )}
+                    {/* Current Weather */}
+                    {weatherData && !error && (
+                        <div className="mb-8 p-4 bg-blue-100 rounded-lg shadow-md">
+                            <h2 className="text-2xl font-semibold text-black mb-4">Current Weather:</h2>
+                            <p className="text-lg text-gray-800">Temperature: <span
+                                className="font-semibold text-gray-800">{weatherData.main?.temp}°C</span></p>
+                            <p className="text-lg text-gray-800">Weather: <span
+                                className="font-semibold text-gray-800">{weatherData.weather?.[0]?.description}</span>
+                            </p>
+                            <p className="text-lg text-gray-800">Humidity: <span
+                                className="font-semibold text-gray-800">{weatherData.main?.humidity}%</span></p>
+                            <p className="text-lg text-gray-800">Wind Speed: <span
+                                className="font-semibold text-gray-800">{weatherData.wind?.speed} m/s</span></p>
+                        </div>
+                    )}
 
-            {/* 5-Day Weather Forecast */}
-            {forecastData && !error && (
-                <div className="p-4 bg-green-100 rounded-lg shadow-md">
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-4 text-gray-800">5-Day Forecast:</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {forecastData.list?.slice(0, 5).map((forecast, index) => (
-                            <div key={index} className="p-4 bg-white rounded-lg shadow-md text-gray-800">
-                                <p className="font-semibold text-lg text-gray-800">{new Date(forecast.dt * 1000).toLocaleString()}</p>
-                                <p className="text-lg text-gray-800">Temp: <span className="font-semibold text-gray-800">{forecast.main?.temp}°C</span></p>
-                                <p className="text-lg text-gray-800">Weather: <span className="font-semibold text-gray-800">{forecast.weather?.[0]?.description}</span></p>
+                    {/* 5-Day Weather Forecast */}
+                    {fiveDayForecast && !error && (
+                        <div className="p-4 bg-green-100 rounded-lg shadow-md">
+                            <h2 className="text-2xl font-semibold text-gray-700 mb-4">5-Day Forecast:</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {fiveDayForecast.map((forecast, index) => (
+                                    <div key={index} className="p-4 bg-white rounded-lg shadow-md text-gray-800">
+                                        <p className="font-semibold text-lg">{new Date(forecast.dt * 1000).toLocaleDateString()}</p>
+                                        <p className="text-lg">Temp: <span
+                                            className="font-semibold">{forecast.main?.temp}°C</span></p>
+                                        <p className="text-lg">Weather: <span
+                                            className="font-semibold">{forecast.weather?.[0]?.description}</span></p>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 };

@@ -1,4 +1,3 @@
-// app/signup/page.tsx
 "use client";
 
 import React, { useState } from 'react';
@@ -24,7 +23,9 @@ const SignupPage: React.FC = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div
+            className="flex items-center justify-center min-h-screen bg-cover bg-center bg-[linear-gradient(to_right,rgba(34,197,94,0.7),rgba(128,90,213,0.7)),url('/students2.jpg')]"
+        >
             <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
                 <h1 className="text-3xl font-bold text-center text-gray-800">Sign Up</h1>
                 <form onSubmit={handleSignup} className="mt-6">
@@ -59,7 +60,7 @@ const SignupPage: React.FC = () => {
                     {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
                     <button
                         type="submit"
-                        className="mt-6 w-full py-3 px-4 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="mt-6 w-full py-3 px-4 bg-red-800 text-white font-semibold rounded-md hover:bg-red-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         Sign Up
                     </button>
