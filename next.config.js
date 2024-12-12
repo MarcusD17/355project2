@@ -1,9 +1,32 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const path = require('path');
+
+module.exports = {
     webpack: (config, { isServer }) => {
-        config.resolve.alias['@/app/firebase-config'] = '@/app/firebase-config.ts';
+        console.log('Webpack Config:', JSON.stringify(config.resolve, null, 2));
         return config;
     },
 };
 
-module.exports = nextConfig;
+const path = require('path');
+
+module.exports = {
+    webpack: (config) => {
+        config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+        config.resolve.extensions.push('.ts', '.tsx', '.js', '.jsx'); // Add missing extensions
+        return config;
+    },
+};
+
+const path = require('path');
+
+module.exports = {
+    webpack: (config) => {
+        config.resolve.alias['@'] = path.resolve(__dirname, 'src');
+        config.resolve.fallback = {
+            fs: false,
+            path: false,
+            os: false,
+        };
+        return config;
+    },
+};
