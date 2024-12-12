@@ -1,7 +1,7 @@
 // AddCoursePage.tsx
 'use client'; // Mark this as a client-side component
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/app/firebase-config';
 import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, limit, startAfter } from 'firebase/firestore';
 import SkeletonLoader from "@/app/ui/skeleton-loader";
@@ -27,32 +27,38 @@ const AddCoursePage = () => {
     const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
 
     // Fetch courses from Firestore with pagination
-    const fetchCourses = async () => {
+    const fetchCourses = useCallback(async () => {
         setLoading(true); // Set loading to true while fetching
-        const coursesQuery = query(
-            collection(db, 'courses'),
-            orderBy('created_at'),
-            limit(itemsPerPage),
-            startAfter((currentPage - 1) * itemsPerPage) // Pagination logic
-        );
+        try {
+            // Pagination logic
+            const coursesQuery = query(
+                collection(db, 'courses'),
+                orderBy('created_at'),
+                limit(itemsPerPage),
+                startAfter((currentPage - 1) * itemsPerPage)
+            );
 
-        const querySnapshot = await getDocs(coursesQuery);
-        const coursesData: unknown[] = [];
-        querySnapshot.forEach((doc) => {
-            coursesData.push({ id: doc.id, ...doc.data() });
-        });
-        setCourses(coursesData);
+            const querySnapshot = await getDocs(coursesQuery);
+            const coursesData: unknown[] = [];
+            querySnapshot.forEach((doc) => {
+                coursesData.push({ id: doc.id, ...doc.data() });
+            });
+            setCourses(coursesData);
 
-        // Get total courses for pagination (used for calculating total pages)
-        const totalQuery = await getDocs(collection(db, 'courses'));
-        setTotalCourses(totalQuery.size); // Update total number of courses
+            // Get total courses for pagination
+            const totalQuery = await getDocs(collection(db, 'courses'));
+            setTotalCourses(totalQuery.size);
+        } catch (error) {
+            console.error('Error fetching courses:', error);
+        } finally {
+            setLoading(false); // Set loading to false after fetching
+        }
+    }, [currentPage, itemsPerPage]); // Dependencies
 
-        setLoading(false); // Set loading to false after fetching
-    };
-
+    // Fetch courses when currentPage changes
     useEffect(() => {
-        fetchCourses(); // Fetch courses on page load
-    }, [currentPage]);
+        fetchCourses();
+    }, [fetchCourses]);
 
     const addCourse = async () => {
         try {

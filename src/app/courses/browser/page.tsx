@@ -1,6 +1,6 @@
 'use client'; // Mark this as a client-side component
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback} from 'react';
 import { useRouter } from 'next/navigation'; // For redirecting
 import { db } from '@/app/firebase-config'; // Make sure the path is correct
 import { collection, getDocs, query, orderBy, limit, startAfter } from 'firebase/firestore';
@@ -19,7 +19,7 @@ const CoursesPage = () => {
     const [courses, setCourses] = useState<Course[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [redirecting, setRedirecting] = useState<boolean>(false); // To handle fast redirecting
-    const [lastVisible, setLastVisible] = useState<any>(null); // Last document for pagination
+    const [lastVisible, setLastVisible] = useState<unknown>(null); // Last document for pagination
     const [currentPage, setCurrentPage] = useState<number>(1); // Current page number
     const [totalCourses, setTotalCourses] = useState<number>(0); // Total number of courses in the collection
 
@@ -41,17 +41,31 @@ const CoursesPage = () => {
         return () => unsubscribe(); // Clean up the subscription on unmount
     }, [router]);
 
-    // Fetch total courses to calculate the total number of pages
-    const fetchTotalCourses = async () => {
+    const fetchTotalCourses = useCallback(async () => {
         try {
             const coursesQuery = query(collection(db, 'courses'));
             const querySnapshot = await getDocs(coursesQuery);
             setTotalCourses(querySnapshot.size); // Set the total number of courses
-            fetchCourses();
+            fetchCourses(); // Ensure this is correctly defined elsewhere
         } catch (error) {
             console.error('Error fetching total courses: ', error);
         }
-    };
+    }, []); // Add any dependencies if required
+ // Add any dependencies if required
+
+    useEffect(() => {
+        const auth = getAuth();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                setRedirecting(true); // Start the redirect process
+                router.push('../authentication/login'); // Redirect to the login page
+            } else {
+                fetchTotalCourses(); // Fetch total courses if logged in
+            }
+        });
+
+        return () => unsubscribe(); // Clean up the subscription on unmount
+    }, [router, fetchTotalCourses]);
 
     const fetchCourses = async () => {
         try {
