@@ -1,17 +1,18 @@
 'use client'; // Mark this as a client-side component
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { db, auth } from '@/app/firebase-config';
-import { collection, addDoc, deleteDoc, doc, getDocs, query, orderBy, limit, startAfter } from 'firebase/firestore';
+import { addDoc, deleteDoc, doc, collection } from 'firebase/firestore';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import SkeletonLoader from "@/app/ui/skeleton-loader";
-import Pagination from "@/app/lib/pagination"; // Import Pagination component
+import { useFirebasePagination } from "@/app/lib/pagination"; // Updated import
 
 interface Course {
     id: string;
     title: string;
     description: string;
     instructor: string;
+    created_at?: Date;
 }
 
 const AddCoursePage = () => {
@@ -21,53 +22,28 @@ const AddCoursePage = () => {
         instructor: '',
     });
 
-    const [courses, setCourses] = useState<Course[]>([]);
     const [coursesToDelete, setCoursesToDelete] = useState<string[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(15);
-    const [totalCourses, setTotalCourses] = useState(0);
-    const [user, setUser] = useState<User | null>(null); // Properly type user state
+    const [user, setUser] = useState<User | null>(null);
 
-    // Fetch the authentication state of the user
-    useEffect(() => {
+    // Use the custom Firebase pagination hook
+    const {
+        items: courses,
+        loading,
+        currentPage,
+        totalPages,
+        fetchNextPage,
+        fetchPrevPage,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        error
+    } = useFirebasePagination<Course>('courses', 15, 'created_at');
+
+    // Authentication state listener
+    React.useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser); // Set the user to state when auth state changes
+            setUser(currentUser);
         });
-        return unsubscribe; // Cleanup the listener when the component unmounts
+        return unsubscribe;
     }, []);
-
-    // Fetch courses from Firestore with pagination
-    const fetchCourses = useCallback(async () => {
-        setLoading(true);
-        try {
-            const coursesQuery = query(
-                collection(db, 'courses'),
-                orderBy('created_at'),
-                limit(itemsPerPage),
-                startAfter((currentPage - 1) * itemsPerPage)
-            );
-
-            const querySnapshot = await getDocs(coursesQuery);
-            const coursesData: Course[] = [];
-            querySnapshot.forEach((doc) => {
-                coursesData.push({ id: doc.id, ...doc.data() } as Course);
-            });
-            setCourses(coursesData);
-
-            const totalQuery = await getDocs(collection(db, 'courses'));
-            setTotalCourses(totalQuery.size);
-        } catch (error) {
-            console.error('Error fetching courses:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [currentPage, itemsPerPage]);
-
-    // Fetch courses when the page loads or when page changes
-    useEffect(() => {
-        fetchCourses();
-    }, [fetchCourses]);
 
     const addCourse = useCallback(async () => {
         if (!user) {
@@ -83,11 +59,11 @@ const AddCoursePage = () => {
                 created_at: new Date(),
             });
             console.log('Course added with ID: ', docRef.id);
-            fetchCourses();
+            // No need to manually fetch courses, the hook will handle updates
         } catch (e) {
             console.error('Error adding course: ', e);
         }
-    }, [user, newCourse, fetchCourses]);
+    }, [user, newCourse]);
 
     const removeCourses = useCallback(async () => {
         if (!user) {
@@ -102,11 +78,11 @@ const AddCoursePage = () => {
                 console.log('Course deleted with ID: ', courseId);
             }
             setCoursesToDelete([]);
-            fetchCourses();
+            // No need to manually fetch courses, the hook will handle updates
         } catch (e) {
             console.error('Error deleting courses: ', e);
         }
-    }, [user, coursesToDelete, fetchCourses]);
+    }, [user, coursesToDelete]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setNewCourse({
@@ -124,9 +100,6 @@ const AddCoursePage = () => {
             }
         });
     };
-
-    // Calculate total number of pages for pagination
-    const totalPages = Math.ceil(totalCourses / itemsPerPage);
 
     // Handle user sign out
     const handleSignOut = useCallback(() => {
@@ -193,7 +166,7 @@ const AddCoursePage = () => {
 
             {user && (
                 <div className="mb-10">
-                    <h2 className="text-2xl text-center font-semibold mb-4">Remove Courses</h2>
+                    <h2 className="text-2xl text-center font-semibold mt-4 mb-4">Remove Courses</h2>
                     <button
                         onClick={removeCourses}
                         className="w-full p-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition-all"
@@ -210,7 +183,7 @@ const AddCoursePage = () => {
                                 <div
                                     key={course.id}
                                     className={`p-4 border-2 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all duration-300 ${coursesToDelete.includes(course.id) ? 'border-blue-500' : 'border-gray-300'}`}
-                                    onClick={() => handleCourseClick(course.id)} // Highlight on click
+                                    onClick={() => handleCourseClick(course.id)}
                                 >
                                     <div>
                                         <h3 className="text-xl font-semibold">{course.title}</h3>
@@ -223,11 +196,23 @@ const AddCoursePage = () => {
                     )}
 
                     {/* Pagination Controls */}
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        setCurrentPage={setCurrentPage}
-                    />
+                    <div className="flex justify-between mt-4">
+                        <button
+                            onClick={fetchPrevPage}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 bg-red-800 text-white rounded disabled:opacity-50"
+                        >
+                            Previous
+                        </button>
+                        <span className="text-white">Page {currentPage} of {totalPages}</span>
+                        <button
+                            onClick={fetchNextPage}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 bg-red-800 text-white rounded disabled:opacity-50"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
 

@@ -227,10 +227,10 @@ const BudgetVisualizer = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-6 mt-20">
+        <div className="max-w-4xl mx-auto p-6 mt-20 mb-20">
             <h2 className="text-3xl font-semibold text-center mb-8">University Budget Report</h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-6 text-gray-600">
                 <div className="bg-white shadow-md rounded-lg p-4">
                     <h3 className="text-xl font-semibold mb-4">Budget Overview</h3>
                     <p>Income: ${income}</p>
@@ -240,7 +240,7 @@ const BudgetVisualizer = () => {
                 <div className="bg-white shadow-md rounded-lg p-4 text-center">
                     <button
                         onClick={generateRandomData}
-                        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        className="px-6 py-3 mt-5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
                         Regenerate Budget Data
                     </button>
                 </div>
