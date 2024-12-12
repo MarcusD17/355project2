@@ -7,8 +7,6 @@ module.exports = {
     },
 };
 
-const path = require('path');
-
 module.exports = {
     webpack: (config) => {
         config.resolve.alias['@'] = path.resolve(__dirname, 'src');
@@ -16,8 +14,6 @@ module.exports = {
         return config;
     },
 };
-
-const path = require('path');
 
 module.exports = {
     webpack: (config) => {
